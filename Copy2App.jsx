@@ -1,4 +1,5 @@
 import { Container } from "@mui/material";
+import useEnhancedEffect from "@mui/material/utils/useEnhancedEffect";
 import { useEffect, useState } from "react";
 import DogCard from "./components/DogCard";
 import DogList from "./components/DogList";
@@ -7,86 +8,101 @@ import Dropdown from "./components/Dropdown";
 import "./styles.css";
 
 
+
+// ✋ augmenter le nombre de race dispo
+const dogBreedlist = ["labrador"];
+
+// ✋ augmenter le nombre de choix dispo
+
+
 // ✋ augmenter le nombre de column dispo
 const columnChoices = [1, 2, 3, 4, 5, 6];
 
 
 export default function App() {
-
+  // 🔫 à modifier
+  // const defaultDogBreed = "bullterrier";
+  
   /* 📣 Intégrer tout ce qui permet de faire les call API,
   stocker les résultats des calls, et de faire fonctionner les dropdowns */
-  // Déclaration des hooks
-  const [col, setCol] = useState(1);
-  const [dogNb, setDogNb] = useState(1);
+  const [data, setData] = useState([]);
+  const [arrLength, setArrlength]= useState([]);
+  const [col, setCol] = useState(0);
+  const [dogs, setDogs] = useState(1);
   const [dogBreeds, setDogBreeds] = useState([]);
   const [currentBreed, setCurrentBreed] = useState("");
   const [currentBreedImg, setCurrentBreedImg] = useState("");
   const [currentListImg, setCurrentListImg] = useState([]);
   const [nbImg, setNbImg] = useState([]);
-  const [number, setNumber] = useState(0);
 
-  
-  
-
-  // fetch une image pour la breed
-  const fetchBreedsList = async (url) => {
+  console.log("imgcount",nbImg)
+  const fetchDogsList = async (url) => {
     const response =  await fetch(url);
     const list = await response.json();
-    const breedsList = Object.keys(list.message);
+    const arr = Object.keys(list.message);
 
-    setDogBreeds(breedsList);
+    setData(list.message);
+    setDogBreeds(arr);
   };
   
+
   // fetch une image pour la breed
-  const fetchDog = async (url) =>{
+  const fetchDogs = async (url) =>{
     const response = await fetch(url);
     const data = await response.json();
     const imgList = data.message;
-
-    setNumber(imgList.length)
+    
     setCurrentBreedImg(imgList);
   };
+
 
   // fetch un nombre d'images pour la breed
   const fetchDogImages = async (url) => {
     const response = await fetch(url);
     const data = await response.json();
-    
+  
+    if(data.status==="success"){
+      
+      
+    };
+
     console.log(`data= ${data.message}`);
 
     setCurrentListImg(data.message);
-    dogImagesCount(data.message.length);
   };
 
-  // function pour récuperer le nombre d'image d'une breed
-  function dogImagesCount (imgLength) {
-    console.log("test",imgLength);
+
+  function dogImagesCount () {
+    console.log("test",currentListImg.length)
     let dogCountChoices = []; 
-    for (let i=1; i < imgLength + 1; i++) {
+    for (let i=1; i < currentListImg.length; i++) {
       dogCountChoices.push(i);
 
+      console.log("i",`${i}`)
+      console.log("index",dogCountChoices)
+
+
     }
-    
-    setNbImg(dogCountChoices);
+    setNbImg(dogCountChoices)
   };
 
 
   useEffect(() =>{
-    if(dogBreeds.length < 1) {
-      fetchBreedsList("https://dog.ceo/api/breeds/list/all");
-    console.log("Start")
-    }
-    
+    fetchDogsList("https://dog.ceo/api/breeds/list/all");
   }, []);
+
 
   useEffect(() =>{
     if(currentBreed!==""){
-      fetchDog(`https://dog.ceo/api/breed/${currentBreed}/images/random`);
-      fetchDogImages(`https://dog.ceo/api/breed/${currentBreed}/images/random/${number}`);      
+
+      fetchDogs(`https://dog.ceo/api/breed/${currentBreed}/images/random`);
+      fetchDogImages(`https://dog.ceo/api/breed/${currentBreed}/images/random/10`);
+      
     }
-    console.log("number", number)
-    // dogImagesCount();
+    dogImagesCount();
   }, [currentBreed]);
+
+
 
 
   return (
@@ -95,7 +111,6 @@ export default function App() {
         <h1>Choose your dog</h1>
         <div className="App_head">
           <div className="App_head_dropdowns">
-          {console.log("imgcount",nbImg)}
             <Dropdown
               // 📣 Ici permettre de changer de race de chien
               // 📣 Augmenter le nombre de choix dispo
@@ -107,10 +122,10 @@ export default function App() {
             <Dropdown
               // 📣 Ici permettre de choisir nombre d'images à afficher
               // 📣 Augmenter le nombre de choix dispo             
-              onChange={setDogNb}
+              onChange={setDogs}
               label="How many dogs"
               values={nbImg}
-              currentValue={dogNb}
+              currentValue={dogs}
             />
             <Dropdown
               // 📣 Ici permettre de choisir le nombre de column à affiche dans la liste d'image             
