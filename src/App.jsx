@@ -15,7 +15,7 @@ export default function App() {
 
   /* 📣 Intégrer tout ce qui permet de faire les call API,
   stocker les résultats des calls, et de faire fonctionner les dropdowns */
-  // Déclaration des hooks
+
   const [col, setCol] = useState(1);
   const [dogNb, setDogNb] = useState(1);
   const [dogBreeds, setDogBreeds] = useState([]);
@@ -23,9 +23,7 @@ export default function App() {
   const [currentBreedImg, setCurrentBreedImg] = useState("");
   const [currentListImg, setCurrentListImg] = useState([]);
   const [nbImg, setNbImg] = useState([]);
-  const [number, setNumber] = useState(0);
-
-  
+  const [indexLimit, setIndexLimit] = useState([]);
   
 
   // fetch une image pour la breed
@@ -42,9 +40,12 @@ export default function App() {
     const response = await fetch(url);
     const data = await response.json();
     const imgList = data.message;
+    if (data.status === "success") {
+      fetchDogImages(`https://dog.ceo/api/breed/${currentBreed}/images/random/${data.message.length}`)
 
-    setNumber(imgList.length)
-    setCurrentBreedImg(imgList);
+    }
+
+    setCurrentBreedImg(data.message);
   };
 
   // fetch un nombre d'images pour la breed
@@ -52,15 +53,14 @@ export default function App() {
     const response = await fetch(url);
     const data = await response.json();
     
-    console.log(`data= ${data.message}`);
-
+    setIndexLimit(data.message)
     setCurrentListImg(data.message);
     dogImagesCount(data.message.length);
   };
 
   // function pour récuperer le nombre d'image d'une breed
   function dogImagesCount (imgLength) {
-    console.log("test",imgLength);
+
     let dogCountChoices = []; 
     for (let i=1; i < imgLength + 1; i++) {
       dogCountChoices.push(i);
@@ -74,7 +74,7 @@ export default function App() {
   useEffect(() =>{
     if(dogBreeds.length < 1) {
       fetchBreedsList("https://dog.ceo/api/breeds/list/all");
-    console.log("Start")
+
     }
     
   }, []);
@@ -82,12 +82,16 @@ export default function App() {
   useEffect(() =>{
     if(currentBreed!==""){
       fetchDog(`https://dog.ceo/api/breed/${currentBreed}/images/random`);
-      fetchDogImages(`https://dog.ceo/api/breed/${currentBreed}/images/random/${number}`);      
+
     }
-    console.log("number", number)
-    // dogImagesCount();
+
   }, [currentBreed]);
 
+// On modifie l'index pour n'afficher que le nombre d'image sélectionné dans le dropdown 
+useEffect(() => {
+  setIndexLimit(currentListImg.splice(0, dogNb))
+
+}, [dogNb]); 
 
   return (
     <main className="App">
@@ -95,7 +99,6 @@ export default function App() {
         <h1>Choose your dog</h1>
         <div className="App_head">
           <div className="App_head_dropdowns">
-          {console.log("imgcount",nbImg)}
             <Dropdown
               // 📣 Ici permettre de changer de race de chien
               // 📣 Augmenter le nombre de choix dispo
@@ -104,18 +107,21 @@ export default function App() {
               values={dogBreeds}
               currentValue={currentBreed}
             />
+            {
+              nbImg.length > 1 && 
+            
             <Dropdown
               // 📣 Ici permettre de choisir nombre d'images à afficher
-              // 📣 Augmenter le nombre de choix dispo             
+              // 📣 Augmenter le nombre de choix dispo      
               onChange={setDogNb}
               label="How many dogs"
               values={nbImg}
               currentValue={dogNb}
             />
+            }
             <Dropdown
               // 📣 Ici permettre de choisir le nombre de column à affiche dans la liste d'image             
               // 📣 Augmenter le nombre de choix dispo
-              // valeur envoyé aux composant
               onChange={setCol}
               label="How many columns"
               values={columnChoices}
@@ -130,7 +136,7 @@ export default function App() {
           />
         </div>
         {/* 📣 Ici récupérer les éléments à afficher depuis l'API */}
-        <DogList itemData={currentListImg} cols={col} />
+        <DogList itemData={indexLimit} cols={col} />
       </Container>
     </main>
   );
